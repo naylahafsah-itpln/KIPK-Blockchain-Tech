@@ -1,1 +1,212 @@
-berisi KIPSeleksi.sol (smart contract utama) dan file unit test menggunakan Hardhat
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract KIPSeleksi {
+
+    address public admin;
+
+    struct Applicant {
+        bytes32 identityHash;
+        uint8 eligibilityScore;
+        bool isApproved;
+        bool resultAnnounced;
+    }
+
+    mapping(bytes32 => Applicant) private applicants;
+
+    uint256 public applicantCount;
+
+
+    event ApplicantRegistered(
+        bytes32 indexed identityHash,
+        uint8 score
+    );
+
+    event ResultAnnounced(
+        bytes32 indexed identityHash,
+        bool isApproved
+    );
+
+    event AdminChanged(
+        address indexed oldAdmin,
+        address indexed newAdmin
+    );
+
+
+    modifier onlyAdmin() {
+        require(
+            msg.sender == admin,
+            "Hanya admin"
+        );
+        _;
+    }
+
+
+    constructor() {
+        admin = msg.sender;
+    }
+
+
+    function registerApplicant(
+        bytes32 identityHash,
+        uint8 eligibilityScore
+    )
+    external
+    onlyAdmin
+    {
+        require(
+            identityHash != bytes32(0),
+            "Hash tidak valid"
+        );
+
+        require(
+            applicants[identityHash].identityHash == bytes32(0),
+            "Peserta sudah terdaftar"
+        );
+
+        require(
+            eligibilityScore <= 100,
+            "Skor tidak valid"
+        );
+
+
+        applicants[identityHash] = Applicant(
+            identityHash,
+            eligibilityScore,
+            false,
+            false
+        );
+
+
+        applicantCount++;
+
+
+        emit ApplicantRegistered(
+            identityHash,
+            eligibilityScore
+        );
+    }
+
+
+    function verifyApplicant(
+        bytes32 identityHash
+    )
+    public
+    view
+    returns(
+        bool registered,
+        bool approved,
+        uint8 score,
+        bool announced
+    )
+    {
+
+        Applicant memory data = applicants[identityHash];
+
+
+        if(
+            data.identityHash == bytes32(0)
+        ){
+            return(
+                false,
+                false,
+                0,
+                false
+            );
+        }
+
+
+        return(
+            true,
+            data.isApproved,
+            data.eligibilityScore,
+            data.resultAnnounced
+        );
+    }
+
+
+    function announceResult(
+        bytes32 identityHash,
+        bool isApproved
+    )
+    external
+    onlyAdmin
+    {
+
+        require(
+            applicants[identityHash].identityHash != bytes32(0),
+            "Data tidak ditemukan"
+        );
+
+
+        applicants[identityHash].isApproved = isApproved;
+
+        applicants[identityHash].resultAnnounced = true;
+
+
+        emit ResultAnnounced(
+            identityHash,
+            isApproved
+        );
+    }
+
+
+    function getResult(
+        bytes32 identityHash
+    )
+    public
+    view
+    returns(
+        bool approved,
+        uint8 score
+    )
+    {
+
+        Applicant memory data = applicants[identityHash];
+
+
+        require(
+            data.identityHash != bytes32(0),
+            "Data tidak ditemukan"
+        );
+
+
+        return(
+            data.isApproved,
+            data.eligibilityScore
+        );
+    }
+
+
+    function getApplicantCount()
+    public
+    view
+    returns(uint256)
+    {
+        return applicantCount;
+    }
+
+
+    function changeAdmin(
+        address newAdmin
+    )
+    external
+    onlyAdmin
+    {
+
+        require(
+            newAdmin != address(0),
+            "Alamat tidak valid"
+        );
+
+
+        emit AdminChanged(
+            admin,
+            newAdmin
+        );
+
+
+        admin = newAdmin;
+    }
+
+}
