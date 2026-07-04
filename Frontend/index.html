@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisiKULIAH - Portal Transparansi KIP-K Berbasis Blockchain</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for beautiful charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0F172A',     /* Slate 900 */
+                            navy: '#1E293B',     /* Slate 800 */
+                            blue: '#3B82F6',     /* Blue 500 */
+                            primary: '#1D4ED8',  /* Blue 700 */
+                            accent: '#0EA5E9',   /* Sky 500 */
+                            success: '#10B981',  /* Emerald 500 */
+                            danger: '#EF4444'    /* Red 500 */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-white text-slate-900 sticky top-0 z-40 border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('beranda')">
+                    <div class="bg-brand-primary p-2.5 rounded-xl shadow-lg shadow-brand-primary/20 flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">VisiKULIAH</span>
+                        <span class="block text-[10px] text-slate-500 tracking-wider uppercase font-semibold">Sistem Transparansi KIP-K</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Menu -->
+                <nav class="hidden md:flex space-x-1 lg:space-x-2">
+                    <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-primary hover:bg-slate-50 transition">Beranda</button>
+                    <button onclick="switchTab('verifikasi')" id="nav-verifikasi" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-primary hover:bg-slate-50 transition">Verifikasi Publik</button>
+                    <button onclick="switchTab('statistik')" id="nav-statistik" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-primary hover:bg-slate-50 transition">Statistik & Audit</button>
+                    <button onclick="switchTab('tentang')" id="nav-tentang" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-primary hover:bg-slate-50 transition">Tentang</button>
+                    <button onclick="switchTab('admin')" id="nav-admin" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-primary hover:bg-slate-50 transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-user-shield text-xs text-brand-primary"></i>
+                        <span>Panel Admin</span>
+                    </button>
+                </nav>
+
+                <!-- Wallet Button / MetaMask Indicator -->
+                <div class="flex items-center space-x-3">
+                    <button id="walletBtn" onclick="connectWallet()" class="bg-brand-primary hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span id="walletBtnText">Hubungkan Wallet</span>
+                    </button>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-slate-200 px-4 py-3 space-y-2">
+            <button onclick="switchTab('beranda'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:text-brand-primary hover:bg-slate-50 font-semibold block text-sm">Beranda</button>
+            <button onclick="switchTab('verifikasi'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:text-brand-primary hover:bg-slate-50 font-semibold block text-sm">Verifikasi Publik</button>
+            <button onclick="switchTab('statistik'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:text-brand-primary hover:bg-slate-50 font-semibold block text-sm">Statistik & Audit</button>
+            <button onclick="switchTab('tentang'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:text-brand-primary hover:bg-slate-50 font-semibold block text-sm">Tentang</button>
+            <button onclick="switchTab('admin'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:text-brand-primary hover:bg-slate-50 font-semibold block text-sm text-brand-primary"><i class="fa-solid fa-user-shield mr-1"></i> Panel Admin</button>
+        </div>
+    </header>
+
+    <!-- METAMASK & CONTRACT STATUS BAR (INFO INTEGRASI BLOCKCHAIN) -->
+    <section class="bg-slate-100 border-b border-slate-200 py-3.5 px-4 sm:px-6 lg:px-8 text-slate-600 text-xs shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 font-sans">
+            <div class="flex flex-wrap items-center justify-center gap-2">
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="flex items-center gap-1.5 text-slate-500 font-bold">
+                    <i class="fa-solid fa-globe"></i> Jaringan:
+                </span>
+                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Ethereum Sepolia Testnet
+                </span>
+                <span class="text-slate-300">|</span>
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-shield text-slate-500"></i>
+                    <span id="adminWallet">
+                        Akun Admin: Belum Terhubung
+                    </span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CUSTOM TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full font-sans"></div>
+
+    <!-- MAIN IMMERSIVE VIEWPORT -->
+    <main class="flex-grow">
+
+        <!-- ================= SECTION 1: LANDING PAGE (BERANDA) ================= -->
+        <section id="tab-beranda" class="tab-content active">
+            <!-- Hero Header Section -->
+            <div class="hero-gradient text-white py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                
+                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+                    <div class="lg:col-span-7 space-y-6 text-left">
+                        <span class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-500/20 text-brand-accent border border-blue-500/30 font-sans">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> Platform Layanan Transparan & Adil
+                        </span>
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+                            Portal Transparansi <br>
+                            <span class="bg-gradient-to-r from-brand-accent via-blue-400 to-white bg-clip-text text-transparent">Seleksi KIP-K Berbasis Trust</span>
+                        </h1>
+                        <p class="text-slate-300 text-base sm:text-lg max-w-xl font-medium leading-relaxed font-sans">
+                            Mengintegrasikan kekuatan audit terdesentralisasi Ethereum dengan perlindungan data pribadi yang ketat. Memastikan setiap kuota beasiswa tersalurkan secara objektif.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                            <button onclick="switchTab('verifikasi')" class="bg-white hover:bg-slate-100 text-brand-primary font-bold px-8 py-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 font-sans">
+                                <i class="fa-solid fa-magnifying-glass text-brand-primary"></i>
+                                <span>Cek Status Seleksi KIP</span>
+                            </button>
+                            <button onclick="switchTab('statistik')" class="bg-transparent border border-slate-500 hover:border-slate-400 hover:bg-white/5 text-white font-bold px-8 py-4 rounded-xl transition flex items-center justify-center space-x-2 font-sans">
+                                <i class="fa-solid fa-circle-nodes"></i>
+                                <span>Periksa Audit Ledger</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Hero Artwork Graphic -->
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96 flex items-center justify-center">
+                            <div class="absolute inset-0 rounded-full border-2 border-brand-accent/20 animate-[spin_12s_linear_infinite]"></div>
+                            <div class="absolute inset-6 rounded-full border border-brand-primary/30 animate-[spin_8s_linear_infinite_reverse]"></div>
+                            
+                            <!-- Isometric Shield Box Graphic -->
+                            <div class="relative bg-white/10 p-8 rounded-3xl border border-white/20 shadow-2xl backdrop-blur-md text-center max-w-sm w-full mx-auto transform hover:scale-105 transition-transform duration-300">
+                                <div class="w-20 h-20 bg-gradient-to-br from-white to-blue-50 text-brand-primary rounded-2xl mx-auto flex items-center justify-center shadow-lg relative">
+                                    <i class="fa-solid fa-graduation-cap text-brand-primary text-4xl"></i>
+                                </div>
+                                <h3 class="mt-6 text-xl font-bold text-white font-sans font-extrabold">Sistem Transparan</h3>
+                                <p class="mt-2 text-xs text-slate-300 font-medium font-sans">KIPSeleksi.sol • Terintegrasi Kriptografi</p>
+                                <div class="mt-5 flex items-center justify-center space-x-2 bg-emerald-500/20 px-4 py-2 rounded-xl text-xs font-semibold text-emerald-300 font-sans">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Identity Hash Protection Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 Pillar Features Grid -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 font-sans">
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Keamanan Informasi & Keadilan Terjamin</h2>
+                    <p class="text-slate-500 mt-2">Menyeimbangkan keterbukaan informasi dengan standar kepatuhan pelindungan data pribadi</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Pillar 1 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 text-left">
+                        <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center mb-6">
+                            <i class="fa-solid fa-user-shield text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Privasi Terlindungi</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Data pribadi pendaftar dilindungi penuh. NIK asli dikonversi menjadi data hash satu-arah sebelum masuk smart contract.
+                        </p>
+                    </div>
+                    <!-- Pillar 2 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 text-left">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                            <i class="fa-solid fa-spell-check text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Transparansi Kriteria</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Skor kelayakan dihitung transparan di awal, sehingga publik dapat memantau keselarasan kelayakan penerima beasiswa.
+                        </p>
+                    </div>
+                    <!-- Pillar 3 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 text-left">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                            <i class="fa-solid fa-network-wired text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Bukti On-Chain</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Setiap penetapan status seleksi dikunci permanen di smart contract Sepolia, menjamin data bebas dari pengubahan pihak luar.
+                        </p>
+                    </div>
+                    <!-- Pillar 4 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 text-left">
+                        <div class="w-12 h-12 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center mb-6">
+                            <i class="fa-solid fa-file-invoice text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Verifikasi Mandiri</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Mahasiswa dapat membuktikan status kelulusannya secara mandiri cukup dengan satu klik menggunakan kode pendaftaran unik.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 2: VERIFIKASI PUBLIK ================= -->
+        <section id="tab-verifikasi" class="tab-content">
+            <div class="max-w-3xl mx-auto px-4 py-12 text-left font-sans">
+                
+                <!-- Main Simple Verification Card -->
+                <div class="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-lg shadow-slate-100 mb-8">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-search text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-2xl font-extrabold text-slate-900">Cek Status Seleksi KIP</h2>
+                            </div>
+                            <p class="text-slate-500 text-sm mt-0.5">Ketikkan Nomor Pendaftaran (Applicant ID) Anda untuk memeriksa hasil seleksi</p>
+                        </div>
+                    </div>
+
+                    <!-- Input Form -->
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Nomor Pendaftaran / Applicant ID</label>
+                            <div class="relative rounded-xl shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-fingerprint"></i>
+                                </div>
+                                <input type="text" id="verifyInput" placeholder="Contoh: KIP-2026-0001" class="block w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 text-slate-900 placeholder-slate-400 font-bold tracking-wider transition uppercase">
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button onclick="performVerification()" class="flex-grow bg-brand-primary hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Periksa Status Seleksi</span>
+                            </button>
+                            <button onclick="clearVerification()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 px-6 rounded-xl transition">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Dynamic Verification Result Card -->
+                <div id="verifyResultCard" class="hidden transform transition-all duration-300">
+                    <!-- Content will be injected dynamically from JS -->
+                </div>
+
+                <!-- Sleek Trust Card describing Blockchain Protections in Layman's Terms -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+                    <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-shield-halved text-brand-primary"></i> Jaminan Validitas & Privasi Blockchain
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-1">
+                            <span class="text-brand-primary font-bold text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-lock-open text-[11px]"></i> Identitas Terlindungi
+                            </span>
+                            <p class="text-[11px] text-slate-500 leading-normal">
+                                NIK pendaftar langsung dikonversi menjadi hash Keccak-256 satu-arah di browser sebelum dikirim, menjaga data asli tidak terekspos.
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-brand-success font-bold text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-[11px]"></i> Integritas Terjamin
+                            </span>
+                            <p class="text-[11px] text-slate-500 leading-normal">
+                                Setiap skor kelayakan dan kelulusan tersimpan permanen di smart contract Sepolia, mencegah risiko manipulasi data kelulusan.
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-brand-accent font-bold text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-magnifying-glass text-[11px]"></i> Audit Terbuka
+                            </span>
+                            <p class="text-[11px] text-slate-500 leading-normal">
+                                Publik dapat memverifikasi kebenaran status seleksi secara transparan langsung menggunakan kode penelusuran on-chain.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 3: STATISTIK & AUDIT ================= -->
+        <section id="tab-statistik" class="tab-content">
+            <div class="max-w-7xl mx-auto px-4 py-12 text-left font-sans">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Statistik Seleksi & Audit Ledger</h2>
+                    <p class="text-slate-500 text-sm">Visualisasi data audit publik real-time langsung yang bersumber dari state Smart Contract</p>
+                </div>
+
+                <!-- Grid of Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <!-- Ratio Doughnut Chart -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col items-center">
+                        <h3 class="text-md font-bold text-slate-800 self-start mb-4">Rasio Seleksi Penerima</h3>
+                        <div class="w-full max-w-[220px] h-[220px] relative flex items-center justify-center">
+                            <canvas id="ratioChart"></canvas>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 w-full mt-6 pt-6 border-t border-slate-100 text-center text-xs font-sans">
+                            <div>
+                                <span class="block font-extrabold text-brand-success text-base font-mono" id="statApproved">--</span>
+                                <span class="text-slate-500 font-medium">Diterima</span>
+                            </div>
+                            <div>
+                                <span class="block font-extrabold text-brand-danger text-base font-mono" id="statRejected">--</span>
+                                <span class="text-slate-500 font-medium">Ditolak</span>
+                            </div>
+                            <div>
+                                <span class="block font-extrabold text-amber-500 text-base font-mono" id="statPending">--</span>
+                                <span class="text-slate-500 font-medium">Proses</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Chart Pendaftaran -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm lg:col-span-2 font-sans">
+                        <h3 class="text-md font-bold text-slate-800 mb-4">Tren Pendaftaran (7 Hari Terakhir)</h3>
+                        <div class="h-[250px] w-full">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blockchain Identity Audit Table (Tabel Audit Publik) -->
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mb-8 font-sans">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-lg font-bold text-slate-900">Daftar Audit Kriptografis (On-Chain Ledger)</h3>
+                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
+                                    <i class="fa-solid fa-shield-halved text-[9px]"></i> Kepatuhan Privasi Data
+                                </span>
+                            </div>
+                            <p class="text-slate-500 text-xs mt-1.5">Tabel ini hanya menampilkan parameter non-PII (Personal Identifiable Information) yang ditarik dari smart contract.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold font-mono" id="badgeTotalAudit">Total Data: --</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 font-sans">
+                                    <th class="px-6 py-4">Applicant ID</th>
+                                    <th class="px-6 py-4">Identity Hash (On-Chain bytes32)</th>
+                                    <th class="px-6 py-4 font-mono">Score</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Opsi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody" class="divide-y divide-slate-100 text-slate-700 text-xs font-semibold font-mono">
+                                <!-- Dynamically loaded from array -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 4: TENTANG SISTEM ================= -->
+        <section id="tab-tentang" class="tab-content">
+            <div class="max-w-5xl mx-auto px-4 py-12 text-left font-sans">
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Tentang Sistem VisiKULIAH</h2>
+                    <p class="text-slate-500 mt-2">Didesain khusus untuk memenuhi integritas audit beasiswa pemerintah di Indonesia</p>
+                </div>
+
+                <!-- Comparison Block (Edukasi Tambahan Dosen) -->
+                <div class="bg-gradient-to-r from-blue-900 to-brand-navy rounded-3xl p-8 text-white mb-10 shadow-lg relative overflow-hidden font-mono">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:10px_10px]"></div>
+                    <div class="relative z-10">
+                        <span class="bg-brand-accent/20 text-brand-accent text-xs font-bold px-3 py-1 rounded-full mb-4 inline-block uppercase tracking-wider font-sans">Metodologi Arsitektur Privasi</span>
+                        <h3 class="text-2xl font-black mb-4 font-sans">Menyelesaikan Dilema Privasi vs Transparansi</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6 font-sans">
+                            Menaruh data pendaftar (NIK, Nama Lengkap) secara langsung pada blockchain publik adalah kesalahan fatal karena melanggar UU Pelindungan Data Pribadi (UU PDP). Namun, menyembunyikannya pada database tradisional rawan akan manipulasi data oleh oknum panitia kampus.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 font-sans">
+                            <div class="p-5 rounded-2xl bg-slate-900/40 border border-white/5 space-y-2">
+                                <h4 class="font-bold text-sm text-brand-accent flex items-center gap-2">
+                                    <i class="fa-solid fa-eye-slash text-xs text-brand-accent"></i> 1. Enkripsi Client-Side (Local Only)
+                                </h4>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    NIK peserta langsung di-hash menjadi format `bytes32` di browser. NIK asli didekripsi dan dimusnahkan seketika setelah hash terbentuk, sehingga tidak ada data pribadi yang keluar dari browser admin.
+                                </p>
+                            </div>
+                            <div class="p-5 rounded-2xl bg-slate-900/40 border border-white/5 space-y-2">
+                                <h4 class="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-link text-xs text-emerald-400"></i> 2. Penyimpanan State On-Chain (Blockchain)
+                                </h4>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    Smart Contract KIPSeleksi hanya menyimpan `Applicant ID` (ID Pendaftar), `Identity Hash`, dan `Skor Kelayakan`. Publik dapat mengaudit keadilan pembagian beasiswa tanpa tahu siapa pemilik asli NIK tersebut.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                    <div class="md:col-span-8 space-y-6">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-4">
+                            <h3 class="text-xl font-bold text-slate-900">Mengapa Memadukan Blockchain & Privacy?</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                Pendekatan seleksi KIP-K tradisional biasanya ditangani secara terpusat oleh server universitas yang tertutup. Ketiadaan mekanisme audit independen memicu keraguan terhadap objektivitas pengumuman.
+                            </p>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                Namun, merancang transparansi di blockchain publik (seperti Ethereum) dapat memicu kebocoran data jika kita mengunggah data NIK atau nama secara terbuka. Solusi VisiKULIAH: Kami menggunakan teknik client-side hashing SHA-256. NIK diubah menjadi hash satu-arah sebelum masuk smart contract. Publik dapat mengaudit proses tanpa melacak identitas asli pemilik NIK.
+                            </p>
+                        </div>
+
+                        <!-- Technical Team Section in Report -->
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-md">
+                            <h3 class="text-lg font-bold text-slate-900 mb-4 font-sans">Informasi Akademis Proyek</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans">
+                                <div class="p-4 bg-slate-50 rounded-2xl">
+                                    <span class="text-slate-500 block text-xs">Mata Kuliah</span>
+                                    <span class="font-bold text-slate-800">Teknologi Blockchain (Kelas A)</span>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl">
+                                    <span class="text-slate-500 block text-xs">Dosen Pengampu</span>
+                                    <span class="font-bold text-slate-800">Riani Saputri Abadi, S.T., M.T.</span>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl">
+                                    <span class="text-slate-500 block text-xs">Institusi</span>
+                                    <span class="font-bold text-slate-800">Institut Teknologi PLN</span>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl">
+                                    <span class="text-slate-500 block text-xs">Tahun Rancang</span>
+                                    <span class="font-bold text-slate-800">2026</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Info -->
+                    <div class="md:col-span-4 space-y-6">
+                        <!-- Smart Contract Card Info -->
+                        <div class="bg-brand-dark text-white p-6 rounded-3xl shadow-lg relative overflow-hidden font-mono">
+                            <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-brand-primary opacity-20 rounded-full blur-xl"></div>
+                            <h4 class="font-bold text-md text-brand-accent mb-4"><i class="fa-solid fa-code-fork mr-2"></i> Kontrak Cerdas</h4>
+                            
+                            <div class="space-y-4 text-xs font-semibold font-mono">
+                                <div>
+                                    <span class="text-slate-400 block font-normal font-sans">Nama Kontrak</span>
+                                    <span class="text-white">KIPSeleksi.sol</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block font-normal font-sans">Versi Solidity</span>
+                                    <span class="text-white">v0.8.20 + EVM</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block font-normal font-sans">Situs Target Deployment</span>
+                                    <span class="text-white flex items-center space-x-1 font-sans">
+                                        <i class="fa-solid fa-globe text-brand-accent"></i>
+                                        <span>Ethereum Sepolia Testnet</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 font-sans">
+                                <a href="https://sepolia.etherscan.io" target="_blank" class="w-full text-center bg-brand-primary hover:bg-blue-600 block text-white font-bold py-2.5 px-4 rounded-xl text-xs transition">
+                                    <i class="fa-solid fa-square-arrow-up-right mr-1"></i> Buka Etherscan
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Kelompok 8 Developers -->
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+                            <h4 class="font-bold text-slate-900 mb-3 text-sm font-sans">Disusun Oleh Kelompok 8:</h4>
+                            <ul class="space-y-2 text-xs font-bold text-slate-700 font-sans">
+                                <li class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
+                                    <span>Nur Azizah</span>
+                                    <span class="text-slate-400 font-mono">202332133</span>
+                                </li>
+                                <li class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
+                                    <span>Nasywa Nurul H.</span>
+                                    <span class="text-slate-400 font-mono">202332141</span>
+                                </li>
+                                <li class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
+                                    <span>Sarah Salsabila A.</span>
+                                    <span class="text-slate-400 font-mono">202332144</span>
+                                </li>
+                                <li class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
+                                    <span>Nayla Hafsah R.</span>
+                                    <span class="text-slate-400 font-mono">202332145</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 5: PANEL ADMINISTRATOR ================= -->
+        <section id="tab-admin" class="tab-content">
+            <div class="max-w-7xl mx-auto px-4 py-8 text-left font-sans">
+                
+                <!-- Connection Alert if Wallet Not Connected -->
+                <div id="adminAuthLock" class="bg-slate-900/95 backdrop-blur-md rounded-3xl p-12 text-center text-white border border-slate-800 shadow-2xl max-w-2xl mx-auto my-12 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-5 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px]"></div>
+                    <div class="w-20 h-20 bg-brand-primary/10 text-brand-primary border border-brand-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-solid fa-user-lock text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Akses Terbuka Petugas</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto mb-6 font-sans">
+                        Hanya Admin yang berhak mengeksekusi state perubahan database KIP-K. Hubungkan dompet MetaMask Anda yang terotorisasi smart contract.
+                    </p>
+                    <button onclick="toggleWalletConnection()" class="bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-brand-primary/30 transition flex items-center justify-center space-x-2 mx-auto">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>Hubungkan Wallet MetaMask</span>
+                    </button>
+                </div>
+
+                <!-- Admin Dashboard (Visible only when connected) -->
+                <div id="adminWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8 font-sans">
+                    
+                    <!-- Sidebar-style Left Panel (Navigation inside Admin) -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm text-left font-sans">
+                            <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100">
+                                <div class="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary font-bold">
+                                    <i class="fa-solid fa-user-gear"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">Dashboard Admin</h4>
+                                    <span class="text-[10px] text-slate-400 font-mono tracking-wider">IT PLN Authorized</span>
+                                </div>
+                            </div>
+                            
+                            <ul class="space-y-1 text-xs font-bold text-slate-600 font-sans">
+                                <li>
+                                    <a class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-50 text-brand-primary">
+                                        <i class="fa-solid fa-gauge"></i>
+                                        <span>Ringkasan Seleksi</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-50 hover:text-slate-800 cursor-not-allowed">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>Data KIP-K Peserta</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Blockchain Node Stats Widgets -->
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-xs font-semibold space-y-4">
+                            <h4 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                                <span>Aktivitas Node Blockchain</span>
+                                <span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] tracking-normal font-bold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Sinkron
+                                </span>
+                            </h4>
+                            
+                            <div class="space-y-3 font-mono text-slate-600">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-400 font-sans font-semibold">Block Terakhir:</span>
+                                    <span id="mockBlockNumber" class="font-mono">5,462,891</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-400 font-sans font-semibold">Total Transaksi:</span>
+                                    <span id="mockTxCount" class="font-mono">3,672</span>
+                                </div>
+                                <div class="flex justify-between items-center font-sans">
+                                    <span class="text-slate-400 font-mono text-xs font-normal font-bold">Target:</span>
+                                    <span class="text-brand-primary font-bold">Sepolia Testnet</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel Content Workspace -->
+                    <div class="lg:col-span-9 space-y-8 font-sans">
+                        
+                        <!-- Top Metrics Cards -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
+                            <!-- card 1 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-sans">Total Pendaftar</span>
+                                <span class="text-2xl font-black text-slate-800" id="metricTotal">--</span>
+                            </div>
+                            <!-- card 2 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-sans">Diverifikasi</span>
+                                <span class="text-2xl font-black text-slate-800" id="metricVerified">--</span>
+                            </div>
+                            <!-- card 3 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-sans text-brand-success font-bold">Diterima</span>
+                                <span class="text-2xl font-black text-brand-success" id="metricApproved">--</span>
+                            </div>
+                            <!-- card 4 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-sans text-brand-danger font-bold">Ditolak</span>
+                                <span class="text-2xl font-black text-brand-danger" id="metricRejected">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Grid For Forms and Dynamic Selection Action -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- 1. Input Form: registerApplicant(bytes32, uint8) -->
+                            <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div>
+                                        <h3 class="text-md font-bold text-slate-900 font-mono">`registerApplicant()`</h3>
+                                        <p class="text-[10px] text-slate-400 font-sans mt-0.5">Daftarkan hash identitas peserta baru</p>
+                                    </div>
+                                    <span class="bg-emerald-50 text-emerald-600 text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200">
+                                        <i class="fa-solid fa-shield-halved"></i> Hash-Only
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-4 text-xs font-bold text-slate-700 font-sans">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <label class="block text-slate-500 font-sans">Nomor Identitas (NIK) Calon Penerima</label>
+                                            <span class="text-[9px] text-slate-400 font-mono font-medium">Auto-Hash Client</span>
+                                        </div>
+                                        <input type="text" id="adminInputNik" placeholder="Masukkan NIK 16 digit" class="block w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 text-slate-900 text-sm font-mono tracking-wider">
+                                        <p class="text-[9px] text-slate-400 font-normal font-sans mt-1 leading-relaxed">
+                                            * Sistem langsung meng-hash NIK pendaftar menjadi format `bytes32`. NIK asli tidak dikirim ke blockchain.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-500 font-sans mb-1.5">Skor Kelayakan (0 - 100)</label>
+                                        <input type="number" id="adminInputScore" min="0" max="100" placeholder="Skor kelayakan ekonomi" class="block w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 text-slate-900 text-sm font-mono">
+                                    </div>
+                                    
+                                    <button onclick="handleRegisterOnChain()" class="w-full bg-brand-primary hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm font-sans">
+                                        <i class="fa-solid fa-file-signature"></i>
+                                        <span>Daftarkan ke Smart Contract</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Interactive Selection List: `announceResult()` -->
+                            <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col font-sans">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 font-sans">
+                                    <div>
+                                        <h3 class="text-md font-bold text-slate-900 font-mono">`announceResult()`</h3>
+                                        <p class="text-[10px] text-slate-400 font-sans mt-0.5">Umumkan & tetapkan kelulusan pendaftar</p>
+                                    </div>
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-sans" id="badgePendingCount">-- Menunggu</span>
+                                </div>
+
+                                <div class="flex-grow overflow-y-auto max-h-[290px] space-y-3 pr-2" id="pendingListContainer">
+                                    <!-- Loaded Dynamically from array -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modern Dashboard Activity Logs (Professional visual timeline) -->
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 font-sans">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                                <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-list-check text-brand-primary mr-2 font-sans"></i> Lini Masa Transaksi & Aktivitas</h3>
+                                <span class="bg-blue-50 text-brand-primary text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-100">Log Aktivitas</span>
+                            </div>
+                            <div id="adminInteractiveLogs" class="space-y-3 max-h-[160px] overflow-y-auto pr-2 text-xs font-mono">
+                                <p class="text-slate-400 font-sans text-xs">// Menunggu instruksi write transaksi (register/announce)...</p>
+                            </div>
+                        </div>
+
+                        <!-- Transaksi Terbaru (Virtual Blockchain Ledger logs) -->
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden font-sans">
+                            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-cubes mr-2 text-indigo-500"></i> Log Transaksi Smart Contract Terbaru</h3>
+                                <span class="text-[10px] text-brand-primary font-bold"><i class="fa-solid fa-circle text-[8px] animate-pulse mr-1 font-mono"></i> Jaringan Sepolia</span>
+                            </div>
+
+                            <div class="overflow-x-auto text-xs font-mono">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100 font-sans">
+                                            <th class="px-6 py-3">Metode / Event</th>
+                                            <th class="px-6 py-3">Keterangan</th>
+                                            <th class="px-6 py-3">Blok</th>
+                                            <th class="px-6 py-3">Tx Hash (Etherscan)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactionTableBody" class="divide-y divide-slate-100 font-semibold text-slate-600">
+                                        <!-- Real simulated transactions loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER SECTION -->
+    <footer class="bg-brand-dark text-slate-400 text-sm py-12 border-t border-slate-800 font-sans">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-primary p-2 rounded-xl text-white">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    </div>
+                    <span class="text-lg font-black text-white">VisiKULIAH</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed font-sans">
+                    Mewujudkan seleksi KIP Kuliah yang transparan, adil, objektif, dan menjaga privasi sepenuhnya melalui kekuatan teknologi blockchain terdesentralisasi.
+                </p>
+                <p class="text-xs text-slate-500">
+                    © 2026 KIPK Blockchain Kelompok 8. All rights reserved.
+                </p>
+            </div>
+            
+            <div>
+                <h5 class="text-white font-bold text-xs uppercase tracking-wider mb-4">Navigasi</h5>
+                <ul class="space-y-2 text-xs">
+                    <li><button onclick="switchTab('beranda')" class="hover:text-white transition">Beranda</button></li>
+                    <li><button onclick="switchTab('verifikasi')" class="hover:text-white transition">Verifikasi Publik</button></li>
+                    <li><button onclick="switchTab('statistik')" class="hover:text-white transition">Statistik & Audit</button></li>
+                    <li><button onclick="switchTab('tentang')" class="hover:text-white transition">Tentang Sistem</button></li>
+                </ul>
+            </div>
+
+            <div>
+                <h5 class="text-white font-bold text-xs uppercase tracking-wider mb-4 font-sans">Sumber Desentralisasi</h5>
+                <ul class="space-y-2 text-xs font-mono">
+                    <li><a href="#" class="hover:text-white transition flex items-center gap-1.5 font-sans"><i class="fa-brands fa-github"></i> <span>GitHub Repository</span></a></li>
+                    <li><a href="#" class="hover:text-white transition flex items-center gap-1.5 font-sans"><i class="fa-solid fa-code"></i> <span>Smart Contract (Solidity)</span></a></li>
+                    <li><a href="#" class="hover:text-white transition flex items-center gap-1.5 font-sans"><i class="fa-solid fa-circle-nodes"></i> <span>Ethereum Sepolia Testnet</span></a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h5 class="text-white font-bold text-xs uppercase tracking-wider mb-4 font-sans">Institut Teknologi PLN</h5>
+                <p class="text-xs leading-relaxed text-slate-400 font-sans">
+                    Proyek Akhir Mata Kuliah Teknologi Blockchain<br>
+                    <strong>Sistem Informasi - Kelas A</strong><br>
+                    Jakarta, Indonesia
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- METAMASK SIMULATOR MODAL (OVERLAY) -->
+    <div id="metaMaskModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-all text-left font-sans">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="w-8 h-8" alt="MetaMask Logo">
+                    <span class="font-black text-slate-800 text-sm font-sans">Konfirmasi Transaksi</span>
+                </div>
+                <span class="bg-blue-100 text-brand-primary text-[10px] font-mono font-black px-2 py-0.5 rounded-full">Sepolia</span>
+            </div>
+
+            <div class="my-5 space-y-4 text-xs font-sans">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-bold">Fungsi Kontrak:</span>
+                        <span id="mmFunctionName" class="font-mono font-bold text-brand-primary">registerApplicant()</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Estimasi Biaya Gas:</span>
+                        <span class="font-mono font-bold text-emerald-600">0.000435 ETH</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-slate-500 block">Identity Hash Payload (bytes32 keccak256):</span>
+                    <span id="mmHashData" class="font-mono text-[10px] block bg-slate-100 p-2 rounded-lg break-all text-slate-600">0x...</span>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 text-sm font-bold font-sans">
+                <button onclick="closeMetaMask(false)" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition">Tolak</button>
+                <button onclick="closeMetaMask(true)" class="flex-1 py-3 bg-brand-primary hover:bg-blue-600 text-white rounded-xl shadow-lg shadow-brand-primary/20 transition">Konfirmasi (Sign)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTRATION RECEIPT SUCCESS MODAL (PROOFS) -->
+    <div id="receiptModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-left relative overflow-hidden font-sans">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-circle-check text-2xl"></i>
+            </div>
+            
+            <h3 class="text-xl font-bold text-center text-slate-900 mb-1">Registrasi Berhasil Disimpan ke Blockchain!</h3>
+            <p class="text-xs text-center text-slate-500 mb-6 font-sans">Data pendaftaran telah berhasil diamankan pada smart contract.</p>
+
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4 mb-6 text-xs font-mono">
+                <div class="flex justify-between items-center border-b border-slate-200/50 pb-2.5">
+                    <span class="text-slate-500 font-sans font-bold">ID Pendaftar (Nomor Registrasi)</span>
+                    <span id="receiptApplicantId" class="font-black text-brand-primary text-sm bg-brand-primary/10 px-2.5 py-1 rounded-lg font-sans">KIP-2026-0006</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-slate-500 block font-sans font-bold">Identity Hash (On-Chain bytes32 keccak256)</span>
+                    <span id="receiptHash" class="break-all bg-white border border-slate-200 p-2 rounded-lg block text-[10px] text-slate-600 select-all">0x...</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-slate-500 block font-sans font-bold">Transaction ID (Tx Hash)</span>
+                    <span id="receiptTxHash" class="break-all bg-white border border-slate-200 p-2 rounded-lg block text-[10px] text-brand-primary select-all">0x...</span>
+                </div>
+                <div class="flex justify-between font-sans">
+                    <span class="text-slate-500">Skor Kelayakan</span>
+                    <span id="receiptScore" class="font-extrabold text-slate-900 font-mono">--</span>
+                </div>
+                <div class="flex justify-between font-sans">
+                    <span class="text-slate-500">Status Awal</span>
+                    <span class="text-amber-600 font-extrabold uppercase bg-amber-50 px-2 py-0.5 rounded text-[10px]">Menunggu Penetapan</span>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-100 text-blue-900 rounded-2xl p-4 text-[11px] leading-relaxed flex items-start gap-2 mb-6 font-sans">
+                <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                <p>
+                    <strong>Langkah Petugas:</strong> Berikan <strong>ID Pendaftar</strong> di atas kepada mahasiswa bersangkutan agar dapat digunakan untuk verifikasi kelulusan mandiri.
+                </p>
+            </div>
+
+            <div class="flex space-x-3 text-sm font-bold font-sans">
+                <button onclick="copyReceiptInfo()" class="flex-grow py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center justify-center space-x-1">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin Data Bukti</span>
+                </button>
+                <button onclick="closeReceiptModal()" class="flex-grow py-3 bg-brand-primary hover:bg-blue-800 text-white rounded-xl transition text-center">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
