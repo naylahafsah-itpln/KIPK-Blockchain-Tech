@@ -1,37 +1,68 @@
 # KIPK-Blockchain-Tech
 
 ## Deskripsi Proyek
-Proyek ini bertujuan untuk menganalisis dan merancang sistem transparansi seleksi penerima KIP Kuliah berbasis teknologi blockchain menggunakan platform Ethereum dan bahasa Solidity.
+KIPK-Blockchain-Tech merupakan aplikasi berbasis blockchain yang dikembangkan untuk meningkatkan transparansi proses seleksi penerima Kartu Indonesia Pintar Kuliah (KIP Kuliah). Sistem memanfaatkan smart contract berbasis Ethereum sehingga proses pendaftaran, pengumuman hasil, dan verifikasi data dapat dilakukan secara transparan, aman, dan terdokumentasi pada blockchain.
 
 ## Latar Belakang
-Sistem seleksi KIP Kuliah saat ini masih bersifat terpusat dan memiliki keterbatasan dalam transparansi serta potensi manipulasi data. Oleh karena itu, blockchain digunakan sebagai solusi karena sifatnya yang immutable, transparan, dan terdesentralisasi.
+Proses seleksi KIP Kuliah masih menghadapi tantangan berupa keterbatasan transparansi dan potensi manipulasi data oleh pihak tertentu. Melalui implementasi blockchain, setiap transaksi dicatat secara permanen (immutable), dapat diaudit oleh publik, serta menjaga privasi data peserta menggunakan hash identitas.
 
 ## Fitur Utama
-- Pendaftaran pendaftar menggunakan hash identitas
-- Verifikasi data secara terbuka
+- Registrasi peserta menggunakan hash identitas (Keccak-256)
 - Pengumuman hasil seleksi secara on-chain
-- Dashboard statistik berbasis data blockchain
+- Verifikasi status peserta secara publik
+- Dashboard monitoring berbasis blockchain
+- Integrasi MetaMask sebagai wallet pengguna
+- Audit transaksi melalui Sepolia Testnet
 
 ## Teknologi yang Digunakan
-- Solidity (Smart Contract)
-- Ethereum (Sepolia Testnet)
+- Solidity
+- Ethereum Sepolia Testnet
 - Ethers.js
-- HTML, CSS, JavaScript
 - MetaMask
+- HTML
+- CSS
+- JavaScript
+- Remix IDE
 
 ## Struktur Folder
-- `contracts/` : Berisi smart contract Solidity
-- `frontend/` : Antarmuka pengguna (UI)
-- `scripts/` : Script pendukung (jika ada)
-- `docs/` : Dokumentasi tambahan
+contracts/   -> Smart Contract Solidity
+frontend/    -> Antarmuka pengguna (UI)
+scripts/     -> Script deployment/testing
+docs/        -> Dokumentasi proyek
 
 ## Smart Contract
 Smart contract utama bernama **KIPSeleksi.sol** yang memiliki fungsi:
-- registerApplicant
-- verifyApplicant
-- announceResult
-- getResult
-- getApplicantCount
+- registerApplicant()
+- announceResult()
+- verifyApplicant()
+- getResult()
+- getApplicantCount()
+- changeAdmin()
+
+## Deployment
+
+Network:
+
+**Ethereum Sepolia Testnet**
+
+Contract Address:
+
+```
+0x6Dd13276e1F60894e4A3FaAa132341B53cf5c55f
+```
+
+Transaction Hash Deployment:
+
+```
+0x3a29573b1bf21da7fae5953b4a1c16b34c1a6aeeebba3f53765e6197af3cfc69
+```
+
+## Integrasi Frontend
+
+Frontend terhubung dengan smart contract menggunakan Ethers.js serta mendukung autentikasi transaksi melalui MetaMask. Seluruh transaksi write akan meminta persetujuan pengguna melalui wallet sebelum dikirim ke jaringan blockchain.
 
 ## Status Proyek
-Proyek ini masih dalam tahap perancangan dan belum di-deploy ke jaringan blockchain publik.
+
+✅ Final Project Mata Kuliah Teknologi Blockchain
+
+Fitur utama telah berhasil diimplementasikan meliputi smart contract, deployment pada Sepolia Testnet, integrasi MetaMask, frontend berbasis web, serta pengujian fungsional sesuai kebutuhan sistem.
